@@ -2,9 +2,16 @@
 # modify mainPath, trainingFolder and testdataFolder to suit your own dataset's location
 # modify L and R to limit the range of k in kNN modules being tested on
 
-import time
-L = 1; R = 1
+# data would be distributed as following:
+# a "training" folder, consists of labelled images
+# "training" folder has subfolders, each contains images of the same label, and the folder itself is named after that label
+# a "testdata" folder, consists of unlabelled images, used to test the accuracy of the modules
 
+import time
+L = 1; R = 40
+
+# defining paths for data
+# would be glad if paths being of any OS' but Windows :)
 mainPath = '/home/akilotus/AIF_Training/mnist_png/'
 trainingFolder = 'training/'
 testdataFolder = 'test_data/'
@@ -14,22 +21,25 @@ def readImages_Training():
     # initialize
     import cv2
     import os, os.path, time
+    from glob import glob
     primalPath = mainPath + trainingFolder
+    subfolderList = sorted(glob(primalPath + '*/'))
     print('Begin loading from ' + primalPath + ' ...', flush=True)
     cntimg = 0
     imgList = []; labelList = []
     startTime = time.time()
 
-    # iterate
-    for id in range(10):
-        path = primalPath + str(id) + '/'
+    # iterate all subfolders
+    for path in subfolderList:
+        id = path.replace(primalPath, '').replace('/', '')
         print('Begin loading from ' + path + ' ...', flush=True)
         cntimg = 0
+        # iterate all images within subfolders
         for filename in os.listdir(path):
             imgList.append(cv2.imread(path + filename, 0).flatten())
             labelList.append(id)
             cntimg += 1
-            print('Loading test image #' + str(cntimg) + ' from folder #' + str(id) + '...', flush=True)
+            print('Loading sample image #' + str(cntimg) + ' from folder #' + str(id) + '...', flush=True)
     
     # finalize and return value
     endTime = time.time()
@@ -48,7 +58,7 @@ def readImages_TestData():
     tmpList = []; fnameList = []
     startTime = time.time()
 
-    # iterate
+    # iterate all images
     for filename in os.listdir(path):
         tmpList.append(cv2.imread(path + filename, 0).flatten())
         fnameList.append(filename)
