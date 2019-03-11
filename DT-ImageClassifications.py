@@ -121,6 +121,7 @@ def mainFunction(trainingFolder, testdataFolder):
     testimgs, testnames = readImages_TestData(testdataFolder)
 
     # initialize module
+    print('Begin training using ' + str(len(imgs)) + ' images...', flush=True)
     startTime = time.time()
     from sklearn.tree import DecisionTreeClassifier
     DT_Module = DecisionTreeClassifier(criterion='entropy', splitter='best')
