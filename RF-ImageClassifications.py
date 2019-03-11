@@ -170,11 +170,14 @@ def mainFunction(trainingFolder, testdataFolder, csvPrefix, L, R, iterationType)
     # each iteration is a different k used in respective Random Forest training module
     # to be more precise, for each k, the amount of trees in the forest is 2^k
     for k in range(L, R+1):
-        # initialize output csv
+        # initialize the number of trees, based on the iteration
+        # and the iterationType declared from command line
         treeCount = 0
         if iterationType == "expo":
             treeCount = (2 ** k)
         else: treeCount = k
+
+        # initialize output csv
         csvResult = csvPrefix + '-'
         if treeCount < 1000: csvResult += '0'
         if treeCount < 100: csvResult += '0'
