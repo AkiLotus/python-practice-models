@@ -165,6 +165,7 @@ def mainFunction(trainingFolder, testdataFolder, csvPrefix, L, R):
 
         # initialize module
         print('Begin working with k = ' + str(k) + '.', flush=True)
+        print('Begin training using ' + str(len(imgs)) + ' images...', flush=True)
         startTime = time.time()
         from sklearn.neighbors import KNeighborsClassifier
         KNN_Module = KNeighborsClassifier(n_neighbors=k, weights='distance', algorithm='ball_tree')
