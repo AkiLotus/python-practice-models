@@ -28,7 +28,7 @@ def filteringException():
             print('Testdata folder "{}" not found!'.format(argv[2]))
             sys.exit(-4042)
 
-        # non-integers arguments at argv[3] and argv[4]
+        # non-integers arguments at argv[4] and argv[5]
         try: int(argv[4])
         except ValueError as ex4:
             print('{} cannot be parsed into int: {}', argv[4], ex4)
