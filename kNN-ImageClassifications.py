@@ -86,7 +86,8 @@ def readImages_Training(trainingFolder):
             imgList.append(cv2.imread(path + filename, 0).flatten())
             labelList.append(id)
             cntimg += 1; totalcnt += 1
-            print('Loading sample image #' + str(cntimg) + ' from folder #' + str(id) + '...', flush=True)
+            print('Loading sample image #' + str(cntimg) + ' from folder #' + str(id) + '...\r', end='', flush=True)
+        print('', sep='\n')
     
     # finalize and return value
     endTime = time.time()
@@ -109,11 +110,11 @@ def readImages_TestData(testdataFolder):
         tmpList.append(cv2.imread(path + filename, 0).flatten())
         fnameList.append(filename)
         cntimg += 1
-        print('Loading test image #' + str(cntimg) + '...', flush=True)
+        print('Loading test image #' + str(cntimg) + '...\r', end='', flush=True)
     
     # finalize and return value
     endTime = time.time()
-    print('Successfully loaded ' + str(cntimg) + ' images.', flush=True)
+    print('\nSuccessfully loaded ' + str(cntimg) + ' images.', flush=True)
     print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
     return tmpList, fnameList
 
