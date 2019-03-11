@@ -1,6 +1,7 @@
 # put this python source code on the main folder of the dataset
-# command line scripts: "python3 thisfilename.py [trainingFolder] [testdataFolder] [minNeighbors] [maxNeighbors]"
-# constraints (2+3): [trainingFolder] and [testdataFolder] must exist
+# command line scripts: "python3 thisfilename.py [trainingFolder] [testdataFolder] [csvoutputPrefix] [minNeighbors] [maxNeighbors]"
+# constraints (1+2): [trainingFolder] and [testdataFolder] must exist
+# constraints (3): [csvoutputPrefix] must make sure any generated files didn't already exist
 # constraints (4+5): [minNeighbors] and [maxNeighbors] are integers. 1 <= minNeighbors <= maxNeighbors <= 100
 
 # data would be distributed as following:
@@ -13,10 +14,10 @@ import os, time, sys
 
 # exception handling
 def filteringException():
-    if len(argv) != 5:
+    if len(argv) != 6:
         # incorrect arguments count
         print('Incorrect format!')
-        print('Valid format: "python3 thisfilename.py [trainingFolder] [testdataFolder] [minNeighbors] [maxNeighbors]"')
+        print('Valid format: "python3 thisfilename.py [trainingFolder] [testdataFolder] [csvoutputPrefix] [minNeighbors] [maxNeighbors]"')
         sys.exit(-1)
     else:
         # folders not found
@@ -28,26 +29,26 @@ def filteringException():
             sys.exit(-4042)
 
         # non-integers arguments at argv[3] and argv[4]
-        try: int(argv[3])
-        except ValueError as ex3:
-            print('{} cannot be parsed into int: {}', argv[3], ex3)
-            sys.exit(-43)
         try: int(argv[4])
         except ValueError as ex4:
             print('{} cannot be parsed into int: {}', argv[4], ex4)
             sys.exit(-44)
+        try: int(argv[5])
+        except ValueError as ex5:
+            print('{} cannot be parsed into int: {}', argv[5], ex5)
+            sys.exit(-45)
         
         # illegal integer limits
-        Lf = int(argv[3]); Rt = int(argv[4])
+        Lf = int(argv[4]); Rt = int(argv[5])
         if Lf > Rt:
             print('Invalid limit: Lower bound {} exceeded upper bound {}!'.format(Lf, Rt))
             sys.exit(-4)
         if Lf < 1 or Lf > 100:
             print('Invalid lower bound {}: integers must be within range [1, 100]!'.format(Lf))
-            sys.exit(-23)
+            sys.exit(-24)
         if Rt < 1 or Rt > 100:
             print('Invalid upper bound {}: integers must be within range [1, 100]!'.format(Rt))
-            sys.exit(-24)
+            sys.exit(-25)
 
 # processing arguments after surpassed all exception tests
 def processArguments():
@@ -55,12 +56,13 @@ def processArguments():
     # would be glad if paths being of any OS' but Windows :)
     trainingFolder = argv[1] + '/'
     testdataFolder = argv[2] + '/'
+    csvoutputPrefix = argv[3]
 
     # defining limits for k being tested
-    L = int(argv[3])
-    R = int(argv[4])
+    L = int(argv[4])
+    R = int(argv[5])
 
-    return trainingFolder, testdataFolder, L, R
+    return trainingFolder, testdataFolder, csvoutputPrefix, L, R
 
 # reading training data from training directories
 def readImages_Training(trainingFolder):
@@ -140,7 +142,7 @@ def prediction(knnModule, csvFileName, testList, fnameList):
     csvOutput.close()
 
 # main function of this source code
-def mainFunction(trainingFolder, testdataFolder, L, R):
+def mainFunction(trainingFolder, testdataFolder, csvPrefix, L, R):
     # reading training data
     imgs, labels = readImages_Training(trainingFolder)
 
@@ -149,6 +151,18 @@ def mainFunction(trainingFolder, testdataFolder, L, R):
 
     # each iteration is a different k used in respective kNN training module
     for k in range(L, R+1):
+        # initialize output csv
+        csvResult = csvPrefix + '-'
+        if k < 10:
+            csvResult += '0'
+        csvResult += str(k)
+        csvResult += '.csv'
+
+        # terminate if output csv file exists
+        if os.path.isfile(csvResult):
+            print('Error, file {} already exists!'.format(csvResult))
+            sys.exit(-4096)
+
         # initialize module
         print('Begin working with k = ' + str(k) + '.', flush=True)
         startTime = time.time()
@@ -159,17 +173,10 @@ def mainFunction(trainingFolder, testdataFolder, L, R):
         print('Successfully fitted ' + str(len(imgs)) + ' images.', flush=True)
         print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
 
-        # initialize output csv
-        csvResult = 'result'
-        if k < 10:
-            csvResult += '0'
-        csvResult += str(k)
-        csvResult += '.csv'
-
-        #perform prediction
+        # perform prediction
         prediction(KNN_Module, csvResult, testimgs, testnames)
 
 if __name__ == "__main__":
     filteringException()
-    trainingFolder, testdataFolder, L, R = processArguments()
-    mainFunction(trainingFolder, testdataFolder, L, R)
+    trainingFolder, testdataFolder, csvPrefix, L, R = processArguments()
+    mainFunction(trainingFolder, testdataFolder, csvPrefix, L, R)
