@@ -110,3 +110,27 @@ displayTree(0, 0)
 EndTime = time.time()
 
 print('Tree produced in {} seconds.'.format(EndTime - StartTime))
+
+"""
+[petal_length < 1.9]
+  [Specified: setosa]
+  [petal_width < 1.7]
+    [petal_length < 5.0]
+      [sepal_length < 5.0]
+        [sepal_width < 2.4]
+          [Specified: versicolor]
+          [Specified: virginica]
+        [Specified: versicolor]
+      [sepal_width < 2.7]
+        [Specified: virginica]
+        [sepal_length < 6.1]
+          [Specified: versicolor]
+          [petal_length < 5.1]
+            [Specified: versicolor]
+            [Specified: virginica]
+    [petal_length < 4.9]
+      [sepal_length < 6.0]
+        [Specified: versicolor]
+        [Specified: virginica]
+      [Specified: virginica]
+"""
