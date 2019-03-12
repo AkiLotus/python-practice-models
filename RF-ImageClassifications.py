@@ -200,8 +200,8 @@ def mainFunction(process, trainingFolder, testdataFolder, csvPrefix, L, R, itera
         # initialize module
         print('\nBegin working with n_estimators = ' + str(treeCount) + '.', flush=True)
         print('Begin training using ' + str(len(imgs)) + ' images...', flush=True)
-        startTime = time.time()
         MemBefore = process.memory_info().rss
+        startTime = time.time()
         RF_Module = RandomForestClassifier(n_estimators=treeCount, criterion='gini', warm_start=False)
         RF_Module.fit(imgs, labels)
         endTime = time.time()
