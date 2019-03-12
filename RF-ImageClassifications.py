@@ -36,61 +36,61 @@ def write(str, end='\n', flush=False):
 def filteringException():
     if len(argv) != 7 and len(argv) != 8:
         # incorrect arguments count
-        print('Incorrect format!')
-        print('Valid format: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix> <iterationType> <min> <max> [<step>]"')
+        write('Incorrect format!')
+        write('Valid format: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix> <iterationType> <min> <max> [<step>]"')
         sys.exit(-1)
     else:
         # folders not found
         if not os.path.isdir(argv[1]):
-            print('Training folder "{}" not found!'.format(argv[1]))
+            write('Training folder "{}" not found!'.format(argv[1]))
             sys.exit(-4041)
         if not os.path.isdir(argv[2]):
-            print('Testdata folder "{}" not found!'.format(argv[2]))
+            write('Testdata folder "{}" not found!'.format(argv[2]))
             sys.exit(-4042)
 
         # illegal iterationType (argv[4])
         if argv[6] != "expo" and argv[4] != "rnge":
-            print('Invalid argv[4]: <iterationType> can only be "expo" or "rnge"!')
+            write('Invalid argv[4]: <iterationType> can only be "expo" or "rnge"!')
             sys.exit(-14)
 
         # non-integers arguments at argv[5] and argv[6]
         try: int(argv[5])
         except ValueError as ex5:
-            print('{} cannot be parsed into int: {}', argv[5], ex5)
+            write('{} cannot be parsed into int: {}', argv[5], ex5)
             sys.exit(-45)
         try: int(argv[6])
         except ValueError as ex6:
-            print('{} cannot be parsed into int: {}', argv[6], ex6)
+            write('{} cannot be parsed into int: {}', argv[6], ex6)
             sys.exit(-46)
         
         # illegal integer limits
         Lf = int(argv[5]); Rt = int(argv[6])
         if Lf > Rt:
-            print('Invalid limit: Lower bound {} exceeded upper bound {}!'.format(Lf, Rt))
+            write('Invalid limit: Lower bound {} exceeded upper bound {}!'.format(Lf, Rt))
             sys.exit(-4)
         if argv[4] == "expo" and (Lf < 0 or Lf > 13):
-            print('Invalid lower bound {}: integers must be within range [0, 13]!'.format(Lf))
+            write('Invalid lower bound {}: integers must be within range [0, 13]!'.format(Lf))
             sys.exit(-25)
         if argv[4] == "expo" and (Rt < 0 or Rt > 13):
-            print('Invalid upper bound {}: integers must be within range [0, 13]!'.format(Rt))
+            write('Invalid upper bound {}: integers must be within range [0, 13]!'.format(Rt))
             sys.exit(-26)
         if argv[4] == "rnge" and (Lf < 1 or Lf > 9999):
-            print('Invalid lower bound {}: integers must be within range [1, 9999]!'.format(Lf))
+            write('Invalid lower bound {}: integers must be within range [1, 9999]!'.format(Lf))
             sys.exit(-25)
         if argv[4] == "rnge" and (Rt < 1 or Rt > 9999):
-            print('Invalid upper bound {}: integers must be within range [1, 9999]!'.format(Rt))
+            write('Invalid upper bound {}: integers must be within range [1, 9999]!'.format(Rt))
             sys.exit(-26)
 
         if len(argv) == 8:
             # non-integers arguments at argv[7]
             try: int(argv[7])
             except ValueError as ex5:
-                print('{} cannot be parsed into int: {}', argv[5], ex5)
+                write('{} cannot be parsed into int: {}', argv[5], ex5)
                 sys.exit(-47)
 
             # non-positive arguments at argv[7]
             if (int(argv[7]) <= 0):
-                print('Invalid argv[7]: <step> must be a positive integer!'.format(argv[7]))
+                write('Invalid argv[7]: <step> must be a positive integer!'.format(argv[7]))
                 sys.exit(-447)
 
 # processing arguments after surpassed all exception tests
@@ -261,4 +261,4 @@ if __name__ == "__main__":
 
     # finish logging
     logfile.close()
-    print('Logs saved into ' + logname + '.')
+    write('Logs saved into ' + logname + '.')
