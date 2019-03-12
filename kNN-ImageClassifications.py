@@ -15,42 +15,53 @@ from sklearn.neighbors import KNeighborsClassifier
 import cv2
 from glob import glob
 
+# logs initialization
+if not 'logs/' in glob('*/'):
+    os.mkdir("logs/")
+logname = "logs/logs-" + str(int(time.time() // 1)) + '.txt'
+global logfile; logfile = None
+
+# redefine "print" function to write in both stdout and logs
+def write(str, end='\n', flush=False):
+    print(str, end=end, flush=flush)
+    logfile.write(str+end)
+
 # exception handling
 def filteringException():
     if len(argv) != 6:
         # incorrect arguments count
-        print('Incorrect format!')
-        print('Valid format: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix> <minNeighbors> <maxNeighbors>"')
+        write('Incorrect format!')
+        write('Valid format: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix> <minNeighbors> <maxNeighbors>"')
         sys.exit(-1)
     else:
         # folders not found
         if not os.path.isdir(argv[1]):
-            print('Training folder "{}" not found!'.format(argv[1]))
+            write('Training folder "{}" not found!'.format(argv[1]))
             sys.exit(-4041)
         if not os.path.isdir(argv[2]):
-            print('Testdata folder "{}" not found!'.format(argv[2]))
+            write('Testdata folder "{}" not found!'.format(argv[2]))
             sys.exit(-4042)
 
         # non-integers arguments at argv[4] and argv[5]
         try: int(argv[4])
         except ValueError as ex4:
-            print('{} cannot be parsed into int: {}', argv[4], ex4)
+            write('{} cannot be parsed into int: {}', argv[4], ex4)
             sys.exit(-44)
         try: int(argv[5])
         except ValueError as ex5:
-            print('{} cannot be parsed into int: {}', argv[5], ex5)
+            write('{} cannot be parsed into int: {}', argv[5], ex5)
             sys.exit(-45)
         
         # illegal integer limits
         Lf = int(argv[4]); Rt = int(argv[5])
         if Lf > Rt:
-            print('Invalid limit: Lower bound {} exceeded upper bound {}!'.format(Lf, Rt))
+            write('Invalid limit: Lower bound {} exceeded upper bound {}!'.format(Lf, Rt))
             sys.exit(-4)
         if Lf < 1 or Lf > 100:
-            print('Invalid lower bound {}: integers must be within range [1, 100]!'.format(Lf))
+            write('Invalid lower bound {}: integers must be within range [1, 100]!'.format(Lf))
             sys.exit(-24)
         if Rt < 1 or Rt > 100:
-            print('Invalid upper bound {}: integers must be within range [1, 100]!'.format(Rt))
+            write('Invalid upper bound {}: integers must be within range [1, 100]!'.format(Rt))
             sys.exit(-25)
 
 # processing arguments after surpassed all exception tests
@@ -72,7 +83,7 @@ def readImages_Training(trainingFolder):
     # initialize
     primalPath = trainingFolder
     subfolderList = sorted(glob(primalPath + '*/'))
-    print('Begin loading from ' + primalPath + ' ...', flush=True)
+    write('Begin loading from ' + primalPath + ' ...', flush=True)
     cntimg = 0; totalcnt = 0
     imgList = []; labelList = []
     startTime = time.time()
@@ -80,20 +91,20 @@ def readImages_Training(trainingFolder):
     # iterate all subfolders
     for path in subfolderList:
         id = path.replace(primalPath, '').replace('/', '')
-        print('Begin loading from ' + path + ' ...', flush=True)
+        write('Begin loading from ' + path + ' ...', flush=True)
         cntimg = 0
         # iterate all images within subfolders
         for filename in os.listdir(path):
             imgList.append(cv2.imread(path + filename, 0).flatten())
             labelList.append(id)
             cntimg += 1; totalcnt += 1
-            print('Loading sample image #' + str(cntimg) + ' from folder #' + str(id) + '...\r', end='', flush=True)
-        print('', sep='\n')
+            write('Loading sample image #' + str(cntimg) + ' from folder #' + str(id) + '...\r', end='', flush=True)
+        write('', end='\n')
     
     # finalize and return value
     endTime = time.time()
-    print('Successfully loaded ' + str(totalcnt) + ' images.', flush=True)
-    print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
+    write('Successfully loaded ' + str(totalcnt) + ' images.', flush=True)
+    write('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
     del primalPath, subfolderList, cntimg, totalcnt, startTime, endTime
     return imgList, labelList
 
@@ -101,7 +112,7 @@ def readImages_Training(trainingFolder):
 def readImages_TestData(testdataFolder):
     # initialize
     path = testdataFolder
-    print('Begin loading from ' + path + ' ...', flush=True)
+    write('Begin loading from ' + path + ' ...', flush=True)
     cntimg = 0
     tmpList = []; fnameList = []
     startTime = time.time()
@@ -111,12 +122,12 @@ def readImages_TestData(testdataFolder):
         tmpList.append(cv2.imread(path + filename, 0).flatten())
         fnameList.append(filename)
         cntimg += 1
-        print('Loading test image #' + str(cntimg) + '...\r', end='', flush=True)
+        write('Loading test image #' + str(cntimg) + '...\r', end='', flush=True)
     
     # finalize and return value
     endTime = time.time()
-    print('\nSuccessfully loaded ' + str(cntimg) + ' images.', flush=True)
-    print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
+    write('\nSuccessfully loaded ' + str(cntimg) + ' images.', flush=True)
+    write('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
     del path, cntimg, startTime, endTime
     return tmpList, fnameList
 
@@ -129,8 +140,8 @@ def prediction(knnModule, csvFileName, testList, fnameList):
     startTime = time.time()
 
     # perform prediction by built-in predict() function
-    print('Begin predicting...', flush=True)
-    print('Writing target: ' + csvFileName + ' ...', flush=True)
+    write('Begin predicting...', flush=True)
+    write('Writing target: ' + csvFileName + ' ...', flush=True)
     labelList = knnModule.predict(testList)
 
     # writing prediction results into csv
@@ -139,15 +150,15 @@ def prediction(knnModule, csvFileName, testList, fnameList):
     
     # finalize and close file output stream
     endTime = time.time()
-    print('Successfully predicted ' + str(cntimg) + ' images.', flush=True)
-    print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
+    write('Successfully predicted ' + str(cntimg) + ' images.', flush=True)
+    write('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
     csvOutput.close()
     del csvOutput, cntimg, startTime, endTime, labelList
 
 # printing logs for consumed memories
 def displayMemory(MemBefore, MemAfter):
     memUsage = MemAfter - MemBefore
-    print('Memory usage: %.2f MiB || %.2f KiB.' % (memUsage / 1048576, memUsage / 1024))
+    write('Memory usage: %.2f MiB || %.2f KiB.' % (memUsage / 1048576, memUsage / 1024))
 
 # main function of this source code
 def mainFunction(process, trainingFolder, testdataFolder, csvPrefix, L, R):
@@ -168,20 +179,20 @@ def mainFunction(process, trainingFolder, testdataFolder, csvPrefix, L, R):
 
         # terminate if output csv file exists
         if os.path.isfile(csvResult):
-            print('Error, file {} already exists!'.format(csvResult))
+            write('Error, file {} already exists!'.format(csvResult))
             sys.exit(-4096)
 
         # initialize module
-        print('\nBegin working with k = ' + str(k) + '.', flush=True)
-        print('Begin training using ' + str(len(imgs)) + ' images...', flush=True)
+        write('\nBegin working with k = ' + str(k) + '.', flush=True)
+        write('Begin training using ' + str(len(imgs)) + ' images...', flush=True)
         MemBefore = process.memory_info().rss
         startTime = time.time()
         KNN_Module = KNeighborsClassifier(n_neighbors=k, weights='distance', algorithm='ball_tree')
         KNN_Module.fit(imgs, labels)
         endTime = time.time()
         MemAfter = process.memory_info().rss
-        print('Successfully fitted ' + str(len(imgs)) + ' images.', flush=True)
-        print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
+        write('Successfully fitted ' + str(len(imgs)) + ' images.', flush=True)
+        write('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
         displayMemory(MemBefore, MemAfter)
 
         # perform prediction
@@ -189,8 +200,22 @@ def mainFunction(process, trainingFolder, testdataFolder, csvPrefix, L, R):
         del KNN_Module, startTime, endTime, MemBefore, MemAfter
 
 if __name__ == "__main__":
+    # initialize memory monitor
     this_process = psutil.Process(os.getpid())
 
+    # handling exceptions and arguments
     filteringException()
     trainingFolder, testdataFolder, csvPrefix, L, R = processArguments()
-    mainFunction(process, trainingFolder, testdataFolder, csvPrefix, L, R)
+
+    # initialize logfiles
+    logfile = open(logname, 'w')
+    logfile.write('Command line: python3 ')
+    for arg in argv: logfile.write(arg + ' ')
+    logfile.write('\n\n')
+    
+    # main training
+    mainFunction(this_process, trainingFolder, testdataFolder, csvPrefix, L, R)
+
+    # finish logging
+    logfile.close()
+    print('Logs saved into ' + logname + '.')
