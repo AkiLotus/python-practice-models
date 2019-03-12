@@ -13,7 +13,10 @@
 # a "testdata" folder, consists of unlabelled images, used to test the accuracy of the modules
 
 from sys import argv
-import os, time, sys
+import os, time, sys, psutil
+from sklearn.ensemble import RandomForestClassifier
+import cv2
+from glob import glob
 
 # exception handling
 def filteringException():
@@ -84,8 +87,6 @@ def processArguments():
 # reading training data from training directories
 def readImages_Training(trainingFolder):
     # initialize
-    import cv2
-    from glob import glob
     primalPath = trainingFolder
     subfolderList = sorted(glob(primalPath + '*/'))
     print('Begin loading from ' + primalPath + ' ...', flush=True)
@@ -110,12 +111,12 @@ def readImages_Training(trainingFolder):
     endTime = time.time()
     print('Successfully loaded ' + str(totalcnt) + ' images.', flush=True)
     print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
+    del primalPath, subfolderList, cntimg, totalcnt, startTime, endTime
     return imgList, labelList
 
 # reading test data from test directories
 def readImages_TestData(testdataFolder):
     # initialize
-    import cv2
     path = testdataFolder
     print('Begin loading from ' + path + ' ...', flush=True)
     cntimg = 0
@@ -133,12 +134,12 @@ def readImages_TestData(testdataFolder):
     endTime = time.time()
     print('\nSuccessfully loaded ' + str(cntimg) + ' images.', flush=True)
     print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
+    del path, cntimg, startTime, endTime
     return tmpList, fnameList
 
 # perform predictions with given modules, target csv file and list of images to be predicted
 def prediction(module, csvFileName, testList, fnameList):
     # initialize
-    import cv2
     csvOutput = open(csvFileName, 'w')
     csvOutput.write('ImageID,Label\n')
     cntimg = len(testList)
@@ -158,9 +159,15 @@ def prediction(module, csvFileName, testList, fnameList):
     print('Successfully predicted ' + str(cntimg) + ' images.', flush=True)
     print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
     csvOutput.close()
+    del csvOutput, cntimg, startTime, endTime, labelList
+
+# printing logs for consumed memories
+def displayMemory(MemBefore, MemAfter):
+    memUsage = MemAfter - MemBefore
+    print('Memory usage: %.2f MiB || %.2f KiB.' % (memUsage / 1048576, memUsage / 1024))
 
 # main function of this source code
-def mainFunction(trainingFolder, testdataFolder, csvPrefix, L, R, iterationType):
+def mainFunction(process, trainingFolder, testdataFolder, csvPrefix, L, R, iterationType):
     # reading training data
     imgs, labels = readImages_Training(trainingFolder)
 
@@ -191,20 +198,25 @@ def mainFunction(trainingFolder, testdataFolder, csvPrefix, L, R, iterationType)
             sys.exit(-4096)
 
         # initialize module
-        print('Begin working with n_estimators = ' + str(treeCount) + '.', flush=True)
+        print('\nBegin working with n_estimators = ' + str(treeCount) + '.', flush=True)
         print('Begin training using ' + str(len(imgs)) + ' images...', flush=True)
         startTime = time.time()
-        from sklearn.ensemble import RandomForestClassifier
+        MemBefore = process.memory_info().rss
         RF_Module = RandomForestClassifier(n_estimators=treeCount, criterion='gini', warm_start=False)
         RF_Module.fit(imgs, labels)
         endTime = time.time()
+        MemAfter = process.memory_info().rss
         print('Successfully fitted ' + str(len(imgs)) + ' images.', flush=True)
         print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
+        displayMemory(MemBefore, MemAfter)
 
         # perform prediction
         prediction(RF_Module, csvResult, testimgs, testnames)
+        del RF_Module, startTime, endTime, MemBefore, MemAfter
 
 if __name__ == "__main__":
+    this_process = psutil.Process(os.getpid())
+
     filteringException()
     trainingFolder, testdataFolder, csvPrefix, L, R, iterationType = processArguments()
-    mainFunction(trainingFolder, testdataFolder, csvPrefix, L, R, iterationType)
+    mainFunction(this_process, trainingFolder, testdataFolder, csvPrefix, L, R, iterationType)
