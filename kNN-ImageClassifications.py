@@ -1,8 +1,8 @@
 # put this python source code on the main folder of the dataset
-# command line scripts: "python3 thisfilename.py [trainingFolder] [testdataFolder] [csvoutputPrefix] [minNeighbors] [maxNeighbors]"
-# constraints (1+2): [trainingFolder] and [testdataFolder] must exist
-# constraints (3): [csvoutputPrefix] must make sure any generated files didn't already exist
-# constraints (4+5): [minNeighbors] and [maxNeighbors] are integers. 1 <= minNeighbors <= maxNeighbors <= 100
+# command line scripts: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix> <minNeighbors> <maxNeighbors>"
+# constraints (1+2): <trainingFolder> and <testdataFolder> must exist
+# constraints (3): <csvoutputPrefix> must make sure any generated files didn't already exist
+# constraints (4+5): <minNeighbors> and <maxNeighbors> are integers. 1 <= minNeighbors <= maxNeighbors <= 100
 
 # data would be distributed as following:
 # a "training" folder, consists of labelled images
@@ -20,7 +20,7 @@ def filteringException():
     if len(argv) != 6:
         # incorrect arguments count
         print('Incorrect format!')
-        print('Valid format: "python3 thisfilename.py [trainingFolder] [testdataFolder] [csvoutputPrefix] [minNeighbors] [maxNeighbors]"')
+        print('Valid format: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix> <minNeighbors> <maxNeighbors>"')
         sys.exit(-1)
     else:
         # folders not found
