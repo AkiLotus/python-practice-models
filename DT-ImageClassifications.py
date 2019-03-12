@@ -1,6 +1,7 @@
 # put this python source code on the main folder of the dataset
-# command line scripts: "python3 thisfilename.py [trainingFolder] [testdataFolder]"
-# constraints (2+3): [trainingFolder] and [testdataFolder] must exist
+# command line scripts: "python3 thisfilename.py [trainingFolder] [testdataFolder] [csvoutputPrefix]"
+# constraints (1+2): [trainingFolder] and [testdataFolder] must exist
+# constraints (3): [csvoutputPrefix] must make sure any generated files didn't already exist
 
 # data would be distributed as following:
 # a "training" folder, consists of labelled images
@@ -8,14 +9,17 @@
 # a "testdata" folder, consists of unlabelled images, used to test the accuracy of the modules
 
 from sys import argv
-import os, time, sys
+import os, time, sys, psutil
+from sklearn.tree import DecisionTreeClassifier
+import cv2
+from glob import glob
 
 # exception handling
 def filteringException():
-    if len(argv) != 3:
+    if len(argv) != 4:
         # incorrect arguments count
         print('Incorrect format!')
-        print('Valid format: "python3 thisfilename.py [trainingFolder] [testdataFolder]"')
+        print('Valid format: "python3 thisfilename.py [trainingFolder] [testdataFolder] [csvoutputPrefix]"')
         sys.exit(-1)
     else:
         # folders not found
@@ -32,14 +36,13 @@ def processArguments():
     # would be glad if paths being of any OS' but Windows :)
     trainingFolder = argv[1] + '/'
     testdataFolder = argv[2] + '/'
+    csvoutputPrefix = argv[3]
 
-    return trainingFolder, testdataFolder
+    return trainingFolder, testdataFolder, csvoutputPrefix
 
 # reading training data from training directories
 def readImages_Training(trainingFolder):
     # initialize
-    import cv2
-    from glob import glob
     primalPath = trainingFolder
     subfolderList = sorted(glob(primalPath + '*/'))
     print('Begin loading from ' + primalPath + ' ...', flush=True)
@@ -63,12 +66,12 @@ def readImages_Training(trainingFolder):
     endTime = time.time()
     print('Successfully loaded ' + str(totalcnt) + ' images.', flush=True)
     print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
+    del primalPath, subfolderList, cntimg, totalcnt, startTime, endTime
     return imgList, labelList
 
 # reading test data from test directories
 def readImages_TestData(testdataFolder):
     # initialize
-    import cv2
     path = testdataFolder
     print('Begin loading from ' + path + ' ...', flush=True)
     cntimg = 0
@@ -86,12 +89,12 @@ def readImages_TestData(testdataFolder):
     endTime = time.time()
     print('Successfully loaded ' + str(cntimg) + ' images.', flush=True)
     print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
+    del path, cntimg, startTime, endTime
     return tmpList, fnameList
 
 # perform predictions with given modules, target csv file and list of images to be predicted
 def prediction(module, csvFileName, testList, fnameList):
     # initialize
-    import cv2
     csvOutput = open(csvFileName, 'w')
     csvOutput.write('ImageID,Label\n')
     cntimg = len(testList)
@@ -111,32 +114,48 @@ def prediction(module, csvFileName, testList, fnameList):
     print('Successfully predicted ' + str(cntimg) + ' images.', flush=True)
     print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
     csvOutput.close()
+    del csvOutput, cntimg, startTime, endTime, labelList
+
+# printing logs for consumed memories
+def displayMemory(MemBefore, MemAfter):
+    memUsage = MemAfter - MemBefore
+    print('Memory usage: %.2f MiB || %.2f KiB.' % (memUsage / 1048576, memUsage / 1024))
 
 # main function of this source code
-def mainFunction(trainingFolder, testdataFolder):
+def mainFunction(process, trainingFolder, testdataFolder, csvPrefix):
     # reading training data
     imgs, labels = readImages_Training(trainingFolder)
 
     # reading test data
     testimgs, testnames = readImages_TestData(testdataFolder)
 
+    # initialize output csv
+    csvResult = csvPrefix + '.csv'
+
+    # terminate if output csv file exists
+    if os.path.isfile(csvResult):
+        print('Error, file {} already exists!'.format(csvResult))
+        sys.exit(-4096)
+
     # initialize module
-    print('Begin training using ' + str(len(imgs)) + ' images...', flush=True)
+    print('\nBegin training using ' + str(len(imgs)) + ' images...', flush=True)
+    MemBefore = process.memory_info().rss
     startTime = time.time()
-    from sklearn.tree import DecisionTreeClassifier
     DT_Module = DecisionTreeClassifier(criterion='entropy', splitter='best')
     DT_Module.fit(imgs, labels)
     endTime = time.time()
+    MemAfter = process.memory_info().rss
     print('Successfully fitted ' + str(len(imgs)) + ' images.', flush=True)
     print('Elapsed time: ' + str(endTime - startTime) + ' seconds.', flush=True)
+    displayMemory(MemBefore, MemAfter)
 
-    # initialize output csv
-    csvResult = 'result.csv'
-
-    #perform prediction
-    prediction(DT_Module, csvResult, testimgs, testnames)
+    # perform prediction
+    prediction(RF_Module, csvResult, testimgs, testnames)
+    del DT_Module, startTime, endTime, MemBefore, MemAfter
 
 if __name__ == "__main__":
+    this_process = psutil.Process(os.getpid())
+
     filteringException()
-    trainingFolder, testdataFolder = processArguments()
-    mainFunction(trainingFolder, testdataFolder)
+    trainingFolder, testdataFolder, csvPrefix = processArguments()
+    mainFunction(this_process, trainingFolder, testdataFolder, csvPrefix)
