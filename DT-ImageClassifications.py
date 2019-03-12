@@ -1,7 +1,7 @@
 # put this python source code on the main folder of the dataset
-# command line scripts: "python3 thisfilename.py [trainingFolder] [testdataFolder] [csvoutputPrefix]"
-# constraints (1+2): [trainingFolder] and [testdataFolder] must exist
-# constraints (3): [csvoutputPrefix] must make sure any generated files didn't already exist
+# command line scripts: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix>"
+# constraints (1+2): <trainingFolder> and <testdataFolder> must exist
+# constraints (3): <csvoutputPrefix> must make sure any generated files didn't already exist
 
 # data would be distributed as following:
 # a "training" folder, consists of labelled images
@@ -19,7 +19,7 @@ def filteringException():
     if len(argv) != 4:
         # incorrect arguments count
         print('Incorrect format!')
-        print('Valid format: "python3 thisfilename.py [trainingFolder] [testdataFolder] [csvoutputPrefix]"')
+        print('Valid format: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix>"')
         sys.exit(-1)
     else:
         # folders not found
