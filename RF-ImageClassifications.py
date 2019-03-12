@@ -261,4 +261,4 @@ if __name__ == "__main__":
 
     # finish logging
     logfile.close()
-    write('Logs saved into ' + logname + '.')
+    print('Logs saved into ' + logname + '.')
