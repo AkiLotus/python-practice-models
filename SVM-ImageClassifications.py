@@ -1,7 +1,11 @@
 # put this python source code on the main folder of the dataset
-# command line scripts: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix>"
+# command line scripts: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix> <modelType> <kernel> <gamma>"
 # constraints (1+2): <trainingFolder> and <testdataFolder> must exist
 # constraints (3): <csvoutputPrefix> must make sure any generated files didn't already exist
+# constraints (4): <modelType> should be either "SVC", "SVR", "NuSVC", "NuSVR", "LinearSVC", "LinearSVR"
+# constraints (5): <kernel> should be either "linear", "poly", "rbf" or "sigmoid"
+# constraints (6): <gamma> should be either "auto" or "scale"
+# <kernel> and <gamma> will be ignored (still being checked) when using LinearSVC
 
 # data would be distributed as following:
 # a "training" folder, consists of labelled images
@@ -14,7 +18,7 @@ from sklearn import svm
 import cv2
 from glob import glob
 
-# initialize if the project folder doesn't contain a "csv" output folder yet
+# initialize if the project folder doesn"t contain a "csv" output folder yet
 if not 'csv/' in glob('*/'):
     os.mkdir("csv/")
 
@@ -31,10 +35,10 @@ def write(str, end='\n', flush=False):
 
 # exception handling
 def filteringException():
-    if len(argv) != 4:
+    if len(argv) != 7:
         # incorrect arguments count
         write('Incorrect format!')
-        write('Valid format: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix>"')
+        write('Valid format: "python3 thisfilename.py <trainingFolder> <testdataFolder> <csvoutputPrefix> <modelType> <kernel> <gamma>"')
         sys.exit(-1)
     else:
         # folders not found
@@ -44,6 +48,19 @@ def filteringException():
         if not os.path.isdir(argv[2]):
             write('Testdata folder "{}" not found!'.format(argv[2]))
             sys.exit(-4042)
+        # <modelType>
+        if argv[4] != 'SVC' and argv[4] != 'NuSVC' and argv[4] != 'LinearSVC' and argv[4] != 'SVR' and argv[4] != 'NuSVR' and argv[4] != 'LinearSVR':
+            write('<modelType> should be either "SVC", "SVR", "NuSVC", "NuSVR", "LinearSVC", "LinearSVR"!')
+            sys.exit(-44)
+        # <kernel>
+        if argv[5] != 'linear' and argv[5] != 'poly' and argv[5] != 'rbf' and argv[5] != 'sigmoid':
+            write('<kernel> should be either "linear", "poly", "rbf" or "sigmoid"!')
+            sys.exit(-45)
+        # <gamma>
+        if argv[6] != 'auto' and argv[6] != 'scale':
+            write('<gamma> should be either "auto" or "scale"!')
+            sys.exit(-46)
+
 
 # processing arguments after surpassed all exception tests
 def processArguments():
@@ -52,8 +69,10 @@ def processArguments():
     trainingFolder = argv[1] + '/'
     testdataFolder = argv[2] + '/'
     csvoutputPrefix = 'csv/' + argv[3]
+    modelType = argv[4]
+    kernel = argv[5]; gamma = argv[6]
 
-    return trainingFolder, testdataFolder, csvoutputPrefix
+    return trainingFolder, testdataFolder, csvoutputPrefix, modelType, kernel, gamma
 
 # reading training data from training directories
 def readImages_Training(trainingFolder):
@@ -138,7 +157,7 @@ def displayMemory(MemBefore, MemAfter):
     write('Memory usage: %.2f MiB || %.2f KiB.' % (memUsage / 1048576, memUsage / 1024))
 
 # main function of this source code
-def mainFunction(process, trainingFolder, testdataFolder, csvPrefix):
+def mainFunction(process, trainingFolder, testdataFolder, csvPrefix, modelType, kernel, gamma):
     # reading training data
     imgs, labels = readImages_Training(trainingFolder)
 
@@ -157,7 +176,17 @@ def mainFunction(process, trainingFolder, testdataFolder, csvPrefix):
     write('\nBegin training using ' + str(len(imgs)) + ' images...', flush=True)
     MemBefore = process.memory_info().rss
     startTime = time.time()
-    SV_Module = svm.SVC(kernel='poly', gamma='auto')
+    SV_Module = None
+
+    # parsing module by arguments
+    if modelType == 'SVC':
+        SV_Module = svm.SVC(kernel=kernel, gamma=gamma)
+    elif modelType == 'NuSVC':
+        SV_Module = svm.NuSVC(kernel=kernel, gamma=gamma)
+    elif modelType == 'LinearSVC':
+        SV_Module = svm.LinearSVC()
+
+    # training modules
     SV_Module.fit(imgs, labels)
     endTime = time.time()
     MemAfter = process.memory_info().rss
@@ -181,10 +210,10 @@ if __name__ == "__main__":
 
     # handling exceptions and arguments
     filteringException()
-    trainingFolder, testdataFolder, csvPrefix = processArguments()
+    trainingFolder, testdataFolder, csvPrefix, modelType, kernel, gamma = processArguments()
     
     # main training
-    mainFunction(this_process, trainingFolder, testdataFolder, csvPrefix)
+    mainFunction(this_process, trainingFolder, testdataFolder, csvPrefix, modelType, kernel, gamma)
 
     # finish logging
     logfile.close()
