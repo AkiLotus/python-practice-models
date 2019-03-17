@@ -15,6 +15,10 @@ from sklearn.neighbors import KNeighborsClassifier
 import cv2
 from glob import glob
 
+# initialize if the project folder doesn't contain a "csv" output folder yet
+if not 'csv/' in glob('*/'):
+    os.mkdir("csv/")
+
 # logs initialization
 if not 'logs/' in glob('*/'):
     os.mkdir("logs/")
@@ -70,7 +74,7 @@ def processArguments():
     # would be glad if paths being of any OS' but Windows :)
     trainingFolder = argv[1] + '/'
     testdataFolder = argv[2] + '/'
-    csvoutputPrefix = argv[3]
+    csvoutputPrefix = 'csv/' + argv[3]
 
     # defining limits for k being tested
     L = int(argv[4])
@@ -203,15 +207,15 @@ if __name__ == "__main__":
     # initialize memory monitor
     this_process = psutil.Process(os.getpid())
 
-    # handling exceptions and arguments
-    filteringException()
-    trainingFolder, testdataFolder, csvPrefix, L, R = processArguments()
-
     # initialize logfiles
     logfile = open(logname, 'w')
     logfile.write('Command line: python3 ')
     for arg in argv: logfile.write(arg + ' ')
     logfile.write('\n\n')
+
+    # handling exceptions and arguments
+    filteringException()
+    trainingFolder, testdataFolder, csvPrefix, L, R = processArguments()
     
     # main training
     mainFunction(this_process, trainingFolder, testdataFolder, csvPrefix, L, R)
